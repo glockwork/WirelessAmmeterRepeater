@@ -41,6 +41,8 @@
 #ifndef  USBH_DEF_H
 #define  USBH_DEF_H
 
+#include "stdint.h"
+
 #ifndef USBH_NULL
 #define USBH_NULL ((void *)0)
 #endif

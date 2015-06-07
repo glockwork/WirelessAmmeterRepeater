@@ -172,8 +172,8 @@ typedef enum
 /**
  * @brief Key push-button
  */
-#define KEY_BUTTON_PIN                   GPIO_Pin_9
-#define KEY_BUTTON_GPIO_PORT             GPIOB
+#define KEY_BUTTON_PIN                   GPIO_Pin_6
+#define KEY_BUTTON_GPIO_PORT             GPIOC
 #define KEY_BUTTON_GPIO_CLK              RCC_APB2Periph_GPIOB
 #define KEY_BUTTON_EXTI_LINE             EXTI_Line9
 #define KEY_BUTTON_EXTI_PORT_SOURCE      GPIO_PortSourceGPIOB

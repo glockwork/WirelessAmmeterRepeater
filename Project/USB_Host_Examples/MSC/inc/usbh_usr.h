@@ -62,8 +62,22 @@ extern  USBH_Usr_cb_TypeDef USR_cb;
 /**
   * @}
   */ 
+/* State Machine for the USBH_USR_ApplicationState */
 
-
+#define USH_USR_BASE_CLASS                      (0x00)
+#define USH_USR_AUDIO_CLASS                     (0x01)
+#define USH_USR_CDC_CONTROL_CLASS               (0x02)
+#define USH_USR_HID_CLASS                       (0x03)
+#define USH_USR_PHYSICAL_CLASS                  (0x05)
+#define USH_USR_IMAGE_CLASS                     (0x06)
+#define USH_USR_PRINTER_CLASS                   (0x07)
+#define USH_USR_MSC_CLASS                       (0x08)
+#define USH_USR_HUB_CLASS                       (0x09)
+#define USH_USR_CDC_DATA_CLASS                  (0x0A)
+#define USH_USR_SMART_CARD_CLASS                (0x0B)
+#define USH_USR_CONTENT_SECURITY_CLASS          (0x0D)
+#define USH_USR_VIDEO_CLASS                     (0x0E)
+#define USH_USR_VENDOR_DEFINE_CLASS             (0xFF)
 
 /** @defgroup USBH_USR_Exported_Defines
   * @{

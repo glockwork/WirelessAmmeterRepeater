@@ -28,7 +28,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "usbh_usr.h"
-//#include "lcd_log.h"
 #include "app_trace.h"
 #include "ff.h"       /* FATFS */
 #include "usbh_msc_core.h"
@@ -215,7 +214,7 @@ void USBH_USR_UnrecoveredError (void)
 */
 void USBH_USR_DeviceDisconnected (void)
 {
-    APP_LOG("[APP]: %s.\r\n",(unsigned char *)MSG_DEV_DISCONNECTED);
+    APP_LOG("[APP]: %s.\r\n",(uint8_t *)MSG_DEV_DISCONNECTED);
 }
 /**
 * @brief  USBH_USR_ResetUSBDevice 
@@ -225,6 +224,7 @@ void USBH_USR_DeviceDisconnected (void)
 void USBH_USR_ResetDevice(void)
 {
   /* callback for USB-Reset */
+    APP_LOG("[APP]: > USR_ResetDevice ...\r\n");
 }
 
 
@@ -238,19 +238,19 @@ void USBH_USR_DeviceSpeedDetected(uint8_t DeviceSpeed)
 {
     if(DeviceSpeed == HPRT0_PRTSPD_HIGH_SPEED)
     {
-        APP_LOG("[APP]: %s.\r\n",(unsigned char *)MSG_DEV_HIGHSPEED);
+        APP_LOG("[APP]: %s.\r\n",(uint8_t *)MSG_DEV_HIGHSPEED);
     }  
     else if(DeviceSpeed == HPRT0_PRTSPD_FULL_SPEED)
     {
-        APP_LOG("[APP]: %s.\r\n",(unsigned char *)MSG_DEV_FULLSPEED);
+        APP_LOG("[APP]: %s.\r\n",(uint8_t *)MSG_DEV_FULLSPEED);
     }
     else if(DeviceSpeed == HPRT0_PRTSPD_LOW_SPEED)
     {
-        APP_LOG("[APP]: %s.\r\n",(unsigned char *)MSG_DEV_LOWSPEED);
+        APP_LOG("[APP]: %s.\r\n",(uint8_t *)MSG_DEV_LOWSPEED);
     }
     else
     {
-        APP_LOG("[APP]: %s.\r\n",(unsigned char *)MSG_DEV_ERROR);
+        APP_LOG("[APP]: %s.\r\n",(uint8_t *)MSG_DEV_ERROR);
     }
 }
 
@@ -290,18 +290,31 @@ void USBH_USR_Configuration_DescAvailable(USBH_CfgDesc_TypeDef * cfgDesc,
                                           USBH_InterfaceDesc_TypeDef *itfDesc,
                                           USBH_EpDesc_TypeDef *epDesc)
 {
-  USBH_InterfaceDesc_TypeDef *id;
-  
-  id = itfDesc;  
-  
-  if((*id).bInterfaceClass  == 0x08)
-  {
-      APP_LOG("[APP]: %s\r\n",(uint8_t *)MSG_MSC_CLASS);
-  }
-  else if((*id).bInterfaceClass  == 0x03)
-  {
-      APP_LOG("[APP]: %s\r\n",(uint8_t *)MSG_HID_CLASS);
-  }    
+    USBH_InterfaceDesc_TypeDef *id;
+    
+    /* Check parameters */
+    usr_assert(cfgDesc != NULL);
+    usr_assert(itfDesc != NULL);
+    usr_assert(epDesc != NULL);
+    
+    id = itfDesc;  
+    if((*id).bInterfaceClass  == USH_USR_MSC_CLASS)
+    {
+        APP_LOG("[APP]: %s\r\n",(uint8_t *)MSG_MSC_CLASS);
+    }
+    else if((*id).bInterfaceClass  == USH_USR_HID_CLASS)
+    {
+        APP_LOG("[APP]: %s\r\n",(uint8_t *)MSG_HID_CLASS);
+    }
+    else if((*id).bInterfaceClass  == USH_USR_VENDOR_DEFINE_CLASS)
+    {
+        APP_LOG("[APP]: > Vendor defined class...\r\n");
+    }
+    else
+    {
+        APP_LOG("[APP]: > Other class : %d...\r\n",(*id).bInterfaceClass);
+    }
+    APP_LOG("[APP]: > Number of Endpoints used : %d...\r\n",(*id).bNumEndpoints);
 }
 
 /**
@@ -312,7 +325,17 @@ void USBH_USR_Configuration_DescAvailable(USBH_CfgDesc_TypeDef * cfgDesc,
 */
 void USBH_USR_Manufacturer_String(void *ManufacturerString)
 {
-  APP_LOG("[APP]: Manufacturer : %s\r\n", (char *)ManufacturerString);
+    /* Check parameters */
+    usr_assert(ManufacturerString != NULL);
+    
+    if(ManufacturerString != NULL)
+    {
+        APP_LOG("[APP]: Manufacturer : %s\r\n", (char *)ManufacturerString);
+    }
+    else
+    {
+        APP_LOG("[APP]: No manufacturer string.\r\n");
+    }
 }
 
 /**
@@ -323,7 +346,17 @@ void USBH_USR_Manufacturer_String(void *ManufacturerString)
 */
 void USBH_USR_Product_String(void *ProductString)
 { 
-    APP_LOG("[APP]: Product : %s\r\n", (char *)ProductString);
+    /* Check parameters */
+    usr_assert(ProductString != NULL);
+    
+    if(ProductString != NULL)
+    {
+        APP_LOG("[APP]: Product : %s\r\n", (char *)ProductString);
+    }
+    else
+    {
+        APP_LOG("[APP]: No product string.\r\n");
+    }
 }
 
 /**
@@ -334,7 +367,14 @@ void USBH_USR_Product_String(void *ProductString)
 */
 void USBH_USR_SerialNum_String(void *SerialNumString)
 {
-    APP_LOG("[APP]: Serial Number : %s\r\n", (char *)SerialNumString);    
+    if(SerialNumString == NULL)
+    {
+        APP_LOG("[APP]: Serial Number : %s\r\n", (char *)SerialNumString);
+    }
+    else
+    {
+        APP_LOG("[APP]: No serial number string.\r\n");
+    }    
 } 
 
 
@@ -374,18 +414,17 @@ void USBH_USR_DeviceNotSupported(void)
 */
 USBH_USR_Status USBH_USR_UserInput(void)
 {
-  USBH_USR_Status usbh_usr_status;
-  
-  usbh_usr_status = USBH_USR_NO_RESP;  
-  
-  /*Key B3 is in polling mode to detect user action */
-  if(STM_EVAL_PBGetState(Button_KEY) == RESET) 
-  {
-    
-    usbh_usr_status = USBH_USR_RESP_OK;
-    
-  } 
-  return usbh_usr_status;
+    USBH_USR_Status usbh_usr_status;
+
+    usbh_usr_status = USBH_USR_NO_RESP;  
+
+    /*Key B3 is in polling mode to detect user action */
+    if(STM_EVAL_PBGetState(Button_KEY) == RESET) 
+    {
+        APP_LOG("[APP]: > UserInput ...\r\n");
+        usbh_usr_status = USBH_USR_RESP_OK;
+    } 
+    return usbh_usr_status;
 }  
 
 /**
@@ -396,7 +435,7 @@ USBH_USR_Status USBH_USR_UserInput(void)
 */
 void USBH_USR_OverCurrentDetected (void)
 {
-    APP_LOG("[APP]: > Overcurrent detected.\r\n"); 
+    APP_LOG("[APP]: > Overcurrent detected ...\r\n"); 
 }
 
 
@@ -709,7 +748,24 @@ void USBH_USR_DeInit(void)
 /**
 * @}
 */ 
-
+static USBH_Status USBH_GETATStatus(USB_OTG_CORE_HANDLE *pdev , USBH_HOST *phost)
+{
+    const uint8_t buffer[] = "AT";
+    
+    phost->Control.setup.b.bmRequestType = USB_D2H | USB_REQ_TYPE_CLASS | \
+                                            USB_REQ_RECIPIENT_INTERFACE;
+  
+    phost->Control.setup.b.bRequest = USB_REQ_GET_MAX_LUN;
+    phost->Control.setup.b.wValue.w = 0;
+    phost->Control.setup.b.wIndex.w = 0;
+    phost->Control.setup.b.wLength.w = strlen(buffer);  
+    
+    USBH_CtlSendData (pdev,
+                      0,
+                      0,
+                      phost->Control.hc_num_out);
+    return USBH_CtlReq(pdev, phost, MSC_Machine.buff , 1 ); 
+}
 /**
 * @}
 */ 

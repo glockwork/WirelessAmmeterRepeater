@@ -33,7 +33,7 @@
 #include "usbh_stdreq.h"
 #include "usbh_core.h"
 #include "usb_hcd_int.h"
-
+#include "app_trace.h"
 
 /** @addtogroup USBH_LIB
   * @{
@@ -395,11 +395,13 @@ void USBH_ErrorHandle(USBH_HOST *phost, USBH_Status errType)
 static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
 {
   USBH_Status Status = USBH_BUSY;  
-  uint8_t Local_Buffer[64];
+  uint8_t Local_Buffer[120];
+    uint16_t index;
   
   switch (phost->EnumState)
   {
-  case ENUM_IDLE:  
+  case ENUM_IDLE: 
+        APP_LOG("[APP]: > ENUM_IDLE\r\n"); 
     /* Get Device Desc for only 1st 8 bytes : To get EP0 MaxPacketSize */
     if ( USBH_Get_DevDesc(pdev , phost, 8) == USBH_OK)
     {
@@ -427,9 +429,9 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     break;
     
   case ENUM_GET_FULL_DEV_DESC:  
+      APP_LOG("[APP]: > ENUM_GET_FULL_DEV_DESC\r\n"); 
     /* Get FULL Device Desc  */
-    if ( USBH_Get_DevDesc(pdev, phost, USB_DEVICE_DESC_SIZE)\
-      == USBH_OK)
+    if ( USBH_Get_DevDesc(pdev, phost, USB_DEVICE_DESC_SIZE) == USBH_OK)
     {
       /* user callback for device descriptor available */
       phost->usr_cb->DeviceDescAvailable(&phost->device_prop.Dev_Desc);      
@@ -438,6 +440,7 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     break;
    
   case ENUM_SET_ADDR: 
+      APP_LOG("[APP]: > ENUM_SET_ADDR\r\n"); 
     /* set address */
     if ( USBH_SetAddress(pdev, phost, USBH_DEVICE_ADDRESS) == USBH_OK)
     {
@@ -475,12 +478,19 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     }
     break;
     
-  case ENUM_GET_FULL_CFG_DESC:  
+  case ENUM_GET_FULL_CFG_DESC:        
     /* get FULL config descriptor (config, interface, endpoints) */
     if (USBH_Get_CfgDesc(pdev, 
                          phost,
                          phost->device_prop.Cfg_Desc.wTotalLength) == USBH_OK)
     {
+        #ifdef DEBUG
+        for(index = 0;index < phost->device_prop.Cfg_Desc.wTotalLength;index ++)
+        {
+            APP_LOG("[APP]: index: %03d,0x%02x\r\n",index,pdev->host.Rx_Buffer[index]); 
+        }
+        #endif
+        
       /* User callback for configuration descriptors available */
       phost->usr_cb->ConfigurationDescAvailable(&phost->device_prop.Cfg_Desc,
                                                       phost->device_prop.Itf_Desc,
@@ -490,7 +500,7 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     }
     break;
     
-  case ENUM_GET_MFC_STRING_DESC:  
+  case ENUM_GET_MFC_STRING_DESC:        
     if (phost->device_prop.Dev_Desc.iManufacturer != 0)
     { /* Check that Manufacturer String is available */
       
@@ -507,12 +517,12 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     }
     else
     {
-      phost->usr_cb->ManufacturerString("N/A");      
+      phost->usr_cb->ManufacturerString(NULL);      
       phost->EnumState = ENUM_GET_PRODUCT_STRING_DESC;
     }
     break;
     
-  case ENUM_GET_PRODUCT_STRING_DESC:   
+  case ENUM_GET_PRODUCT_STRING_DESC:       
     if (phost->device_prop.Dev_Desc.iProduct != 0)
     { /* Check that Product string is available */
       if ( USBH_Get_StringDesc(pdev,
@@ -533,7 +543,8 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     } 
     break;
     
-  case ENUM_GET_SERIALNUM_STRING_DESC:   
+  case ENUM_GET_SERIALNUM_STRING_DESC: 
+    APP_LOG("[APP]: > ENUM_GET_SERIALNUM_STRING_DESC\r\n");       
     if (phost->device_prop.Dev_Desc.iSerialNumber != 0)
     { /* Check that Serial number string is available */    
       if ( USBH_Get_StringDesc(pdev, 
@@ -554,7 +565,7 @@ static USBH_Status USBH_HandleEnum(USB_OTG_CORE_HANDLE *pdev, USBH_HOST *phost)
     }  
     break;
       
-  case ENUM_SET_CONFIGURATION:
+  case ENUM_SET_CONFIGURATION: 
     /* set configuration  (default config) */
     if (USBH_SetCfg(pdev, 
                     phost,

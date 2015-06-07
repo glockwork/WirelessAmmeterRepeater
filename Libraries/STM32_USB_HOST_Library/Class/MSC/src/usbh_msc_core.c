@@ -43,6 +43,7 @@
 #include "usbh_msc_scsi.h"
 #include "usbh_msc_bot.h"
 #include "usbh_core.h"
+#include "app_trace.h"
 
 
 /** @addtogroup USBH_LIB
@@ -172,7 +173,8 @@ static USBH_Status USBH_MSC_InterfaceInit ( USB_OTG_CORE_HANDLE *pdev,
                                         void *phost)
 {	 
   USBH_HOST *pphost = phost;
-  
+  APP_LOG("[MSC]: > USBH_MSC_InterfaceInit ...\r\n"); 
+    
   if((pphost->device_prop.Itf_Desc[0].bInterfaceClass == MSC_CLASS) && \
      (pphost->device_prop.Itf_Desc[0].bInterfaceProtocol == MSC_PROTOCOL))
   {
@@ -240,6 +242,7 @@ static USBH_Status USBH_MSC_InterfaceInit ( USB_OTG_CORE_HANDLE *pdev,
 void USBH_MSC_InterfaceDeInit ( USB_OTG_CORE_HANDLE *pdev,
                                 void *phost)
 {	
+    APP_LOG("[MSC]: > USBH_MSC_InterfaceDeInit ...\r\n"); 
   if ( MSC_Machine.hc_num_out)
   {
     USB_OTG_HC_Halt(pdev, MSC_Machine.hc_num_out);
@@ -266,8 +269,8 @@ void USBH_MSC_InterfaceDeInit ( USB_OTG_CORE_HANDLE *pdev,
 static USBH_Status USBH_MSC_ClassRequest(USB_OTG_CORE_HANDLE *pdev , 
                                         void *phost)
 {   
-  
   USBH_Status status = USBH_OK ;
+    APP_LOG("[MSC]: > USBH_MSC_ClassRequest ...\r\n");
   USBH_MSC_BOTXferParam.MSCState = USBH_MSC_BOT_INIT_STATE;
   
   return status; 
@@ -293,7 +296,7 @@ static USBH_Status USBH_MSC_Handle(USB_OTG_CORE_HANDLE *pdev ,
   
   static uint8_t maxLunExceed = FALSE;
   
-    
+ APP_LOG("[MSC]: > USBH_MSC_Handle ...\r\n");   
   if(HCD_IsDeviceConnected(pdev))
   {   
     switch(USBH_MSC_BOTXferParam.MSCState)

@@ -183,7 +183,7 @@ void OTG_FS_IRQHandler(void)
 void OTG_HS_IRQHandler(void)
 #endif
 {
-  USBH_OTG_ISR_Handler(&USB_OTG_Core);
+    USBH_OTG_ISR_Handler(&USB_OTG_Core);
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -29,6 +29,7 @@
 #include "usb_core.h"
 #include "usb_defines.h"
 #include "usb_hcd_int.h"
+#include "app_trace.h"
 
 #if defined   (__CC_ARM) /*!< ARM Compiler */
 #pragma O0
@@ -244,11 +245,11 @@ static uint32_t USB_OTG_USBH_handle_sof_ISR (USB_OTG_CORE_HANDLE *pdev)
 static uint32_t USB_OTG_USBH_handle_Disconnect_ISR (USB_OTG_CORE_HANDLE *pdev)
 {
   USB_OTG_GINTSTS_TypeDef      gintsts;
-  
+
   gintsts.d32 = 0;
   
   USBH_HCD_INT_fops->DevDisconnected(pdev);
-  
+    
   /* Clear interrupt */
   gintsts.b.disconnect = 1;
   USB_OTG_WRITE_REG32(&pdev->regs.GREGS->GINTSTS, gintsts.d32);
